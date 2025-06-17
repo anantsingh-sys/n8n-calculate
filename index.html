@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Calculator 💡</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f2f5f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .calculator-container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 4px;
+      font-weight: 600;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #dcdcdc;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #2ecc71;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+
+    button:hover {
+      background-color: #27ae60;
+    }
+
+    .response {
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 20px;
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    .success {
+      background-color: #e8f9e8;
+      color: #2d7a2d;
+    }
+
+    .error {
+      background-color: #fdecea;
+      color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator-container">
+    <h2>🧠 Smart Threshold Calculator</h2>
+
+    <label for="num1">First Number:</label>
+    <input type="number" id="num1" required />
+
+    <label for="num2">Second Number:</label>
+    <input type="number" id="num2" required />
+
+    <label for="operation">Operation:</label>
+    <select id="operation" required>
+      <option value="">Select</option>
+      <option value="add">Add ➕</option>
+      <option value="subtract">Subtract ➖</option>
+      <option value="multiply">Multiply ✖️</option>
+      <option value="divide">Divide ➗</option>
+    </select>
+
+    <label for="threshold">Threshold (Default 100):</label>
+    <input type="number" id="threshold" placeholder="100" />
+
+    <button onclick="calculate()">Calculate</button>
+
+    <div id="response" class="response"></div>
+  </div>
+
+  <script>
+    async function calculate() {
+      const num1 = parseFloat(document.getElementById("num1").value);
+      const num2 = parseFloat(document.getElementById("num2").value);
+      const operation = document.getElementById("operation").value.trim().toLowerCase();
+      const thresholdInput = document.getElementById("threshold").value;
+      const threshold = thresholdInput ? parseFloat(thresholdInput) : 100;
+
+      const payload = { num1, num2, operation, threshold };
+
+      const responseDiv = document.getElementById("response");
+      responseDiv.style.display = "none";
+
+      try {
+        const res = await fetch("http://localhost:5678/webhook/calculate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.error && data.error !== "None") {
+          responseDiv.className = "response error";
+          responseDiv.innerText = `❌ Error: ${data.error}`;
+        } else {
+          responseDiv.className = "response success";
+          responseDiv.innerText = `✅ Result: ${data.result}\n📊 Status: ${data.alert}`;
+        }
+
+        responseDiv.style.display = "block";
+      } catch (err) {
+        responseDiv.className = "response error";
+        responseDiv.innerText = `❌ Network or server error: ${err.message}`;
+        responseDiv.style.display = "block";
+      }
+    }
+  </script>
+</body>
+</html>
